@@ -129,5 +129,5 @@ func Download(music *models.Music) {
 		}
 	}
 	music.Name = fmt.Sprintf("%v - %v.mp3", music.Singer, music.Title)
-	common.MusicDownload(music)
+	common.MusicDownload(*music)
 }
