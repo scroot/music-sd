@@ -3,19 +3,19 @@ package netease
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/scroot/music-sd/models"
-	"github.com/scroot/music-sd/pkg/common"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/scroot/music-sd/models"
+	"github.com/scroot/music-sd/pkg/common"
 )
 
 // 搜索netease音乐
-func Search(keyword string) (musicList []models.Music) {
+func Search(keyword string) (musicList []common.Music) {
 	// 初始化requestJson
 	requestJSON := map[string]interface{}{
 		"method": "POST",
@@ -70,7 +70,7 @@ func Search(keyword string) (musicList []models.Music) {
 	}
 
 	// 结构化music
-	var music models.Music
+	var music common.Music
 	for _, song := range respJson.Result.Songs {
 
 		if song.Privilege.Fl == 0 {
@@ -107,67 +107,4 @@ func Search(keyword string) (musicList []models.Music) {
 		musicList = append(musicList, music)
 	}
 	return musicList
-}
-
-// 下载netease音乐
-func Download(music *models.Music) {
-	musicId := "[" + strconv.Itoa(music.ID) + "]"
-	// 初始化requestJson
-	requestJSON := map[string]interface{}{
-		"method": "POST",
-		"url":    "http://music.163.com/api/song/enhance/player/url",
-		"params": map[string]interface{}{
-			"ids": musicId,
-			"br":  320000,
-		},
-	}
-
-	// json化数据
-	requestBytes, err := json.Marshal(requestJSON)
-	if err != nil {
-		log.Panic(err)
-	}
-	encryptedString := common.EncryptForm(requestBytes)
-
-	// post form
-	form := url.Values{}
-	form.Add("eparams", encryptedString)
-
-	req, err := http.NewRequest("POST", "http://music.163.com/api/linux/forward", strings.NewReader(form.Encode()))
-
-	// FAKE_HEADERS
-	common.AddHeader(req)
-	req.Header.Set("referer", "http://music.163.com/")
-
-	client := http.Client{}
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	//fmt.Println(resp.StatusCode)
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	//fmt.Printf("content: %s\n", content)
-
-	var respJson models.MusicDownloadNetease
-
-	err = json.Unmarshal(content, &respJson)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	//fmt.Println(respJson.Code)
-	if respJson.Code != 200 {
-		log.Panic("code not 200 ", respJson.Code)
-	}
-
-	music.Url = respJson.Data[0].URL
-	music.Name = fmt.Sprintf("%v - %v.%v", music.Singer, music.Title, respJson.Data[0].Type)
-	music.Rate = strconv.Itoa(respJson.Data[0].Br / 1000)
-
-	common.MusicDownload(music)
 }

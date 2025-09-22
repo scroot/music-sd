@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/zou2699/music-sd/pkg/netease"
-	"github.com/zou2699/music-sd/pkg/qq"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/scroot/music-sd/pkg/netease"
+	"github.com/scroot/music-sd/pkg/qq"
 )
 
 func main() {
@@ -60,19 +61,12 @@ func main() {
 			}
 
 			music := musicList[i]
-			if music.Source == "QQ" {
-				wg.Add(1)
-				go func() {
-					qq.Download(music)
-					wg.Done()
-				}()
-			} else if music.Source == "NETEASE" {
-				wg.Add(1)
-				go func() {
-					netease.Download(music)
-					wg.Done()
-				}()
-			}
+			music.ParseMusic()
+
+			wg.Add(1)
+			music.Get("")
+			wg.Done()
+
 		}
 		wg.Wait()
 		fmt.Printf("#########Done##########\n\n")

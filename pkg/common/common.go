@@ -1,19 +1,12 @@
 package common
 
 import (
+	"crypto/aes"
 	"encoding/hex"
-	"fmt"
-	"github.com/scroot/music-sd/models"
-	"github.com/scroot/music-sd/utils"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
-	"regexp"
-	"runtime"
 	"strconv"
-	"time"
 )
 
 func AddHeader(req *http.Request) {
@@ -30,7 +23,7 @@ func AddHeader(req *http.Request) {
 func EncryptForm(requestBytes []byte) (encryptedString string) {
 	//获取key的二进制字符串作为key
 	key, _ := hex.DecodeString("7246674226682325323F5E6544673A51")
-	encryptedBytes := utils.AESEncrypt(requestBytes, key)
+	encryptedBytes := AESEncrypt(requestBytes, key)
 	//获取加密后的字符串
 	encryptedString = hex.EncodeToString(encryptedBytes)
 	//解密
@@ -43,39 +36,48 @@ func EncryptForm(requestBytes []byte) (encryptedString string) {
 
 }
 
-// 下载
-func MusicDownload(music *models.Music) {
+func AESEncrypt(src []byte, key []byte) (encrypted []byte) {
+	cipher, _ := aes.NewCipher(generateKey(key))
+	length := (len(src) + aes.BlockSize) / aes.BlockSize
+	plain := make([]byte, length*aes.BlockSize)
+	copy(plain, src)
+	pad := byte(len(plain) - len(src))
+	for i := len(src); i < len(plain); i++ {
+		plain[i] = pad
+	}
+	encrypted = make([]byte, len(plain))
 
-	filename := music.Name
-	//fmt.Println(music.Name)
-	if runtime.GOOS == "windows" {
-		compile, err := regexp.Compile("[\\/:*?\"<>|]")
-		if err != nil {
-			log.Panic(err)
+	for bs, be := 0, cipher.BlockSize(); bs <= len(src); bs, be = bs+cipher.BlockSize(), be+cipher.BlockSize() {
+		cipher.Encrypt(encrypted[bs:be], plain[bs:be])
+	}
+
+	return encrypted
+}
+
+func AESDecrypt(encrypted []byte, key []byte) (decrypted []byte) {
+	cipher, _ := aes.NewCipher(generateKey(key))
+	decrypted = make([]byte, len(encrypted))
+	for bs, be := 0, cipher.BlockSize(); bs < len(encrypted); bs, be = bs+cipher.BlockSize(), be+cipher.BlockSize() {
+		cipher.Decrypt(decrypted[bs:be], encrypted[bs:be])
+	}
+
+	trim := 0
+	if len(decrypted) > 0 {
+		trim = len(decrypted) - int(decrypted[len(decrypted)-1])
+	}
+
+	return decrypted[:trim]
+}
+
+func generateKey(key []byte) (genKey []byte) {
+	genKey = make([]byte, 16)
+	copy(genKey, key)
+	for i := 16; i < len(key); {
+		for j := 0; j < 16 && i < len(key); j, i = j+1, i+1 {
+			genKey[j] ^= key[i]
 		}
-		filename = compile.ReplaceAllString(filename, ",")
 	}
-
-	//fmt.Println("开始下载", filename)
-	t1 := time.Now()
-
-	response, err := http.Get(music.Url)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	file, err := os.Create(filename)
-	defer file.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	_, err = io.Copy(file, response.Body)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	elapsed := time.Since(t1)
-	fmt.Printf("%s 下载完成, 音质%skbps, 耗时: %v\n", filename, music.Rate, elapsed)
+	return genKey
 }
 
 // Head the url
