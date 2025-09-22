@@ -75,7 +75,7 @@ func Search(keyword string) (musicList []models.Music) {
 	return musicList
 }
 
-func Download(music models.Music) {
+func Download(music *models.Music) {
 	// 根据songmid等信息获得下载链接
 	guid := common.Random(100000000, 10000000000)
 	req, err := http.NewRequest("GET", "http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg", nil)
