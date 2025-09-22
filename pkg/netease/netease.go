@@ -169,5 +169,5 @@ func Download(music *models.Music) {
 	music.Name = fmt.Sprintf("%v - %v.%v", music.Singer, music.Title, respJson.Data[0].Type)
 	music.Rate = strconv.Itoa(respJson.Data[0].Br / 1000)
 
-	common.MusicDownload(*music)
+	common.MusicDownload(music)
 }
