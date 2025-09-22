@@ -110,7 +110,7 @@ func Search(keyword string) (musicList []models.Music) {
 }
 
 // 下载netease音乐
-func Download(music models.Music) {
+func Download(music *models.Music) {
 	musicId := "[" + strconv.Itoa(music.ID) + "]"
 	// 初始化requestJson
 	requestJSON := map[string]interface{}{
