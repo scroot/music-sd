@@ -3,8 +3,8 @@ package netease
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/zou2699/music-sd/models"
-	"github.com/zou2699/music-sd/pkg/common"
+	"github.com/scroot/music-sd/models"
+	"github.com/scroot/music-sd/pkg/common"
 	"io/ioutil"
 	"log"
 	"net/http"
