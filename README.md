@@ -7,8 +7,8 @@ netease and qq music search and download
 
    安装go的基础的环境
 ```sh
-go get -d github.com/zou2699/music-sd
-cd $GOPATH/src/github.com/zou2699/music-sd
+go get -d github.com/scroot/music-sd
+cd $GOPATH/src/github.com/scroot/music-sd
 go build .
 ```
 2. 直接使用编译好二进制包
