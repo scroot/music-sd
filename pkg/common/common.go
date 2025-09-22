@@ -44,7 +44,7 @@ func EncryptForm(requestBytes []byte) (encryptedString string) {
 }
 
 // 下载
-func MusicDownload(music *models.Music) {
+func MusicDownload(music models.Music) {
 
 	filename := music.Name
 	//fmt.Println(music.Name)
